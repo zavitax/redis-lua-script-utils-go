@@ -32,7 +32,7 @@ import (
 )
 
 func main() {
-  scriptText1 := `redis.call('SET', key1, arg1);`
+	scriptText1 := `redis.call('SET', key1, arg1);`
 	scriptText2 := `redis.call('SET', key2, arg2);`
 	scriptText3 := `redis.call('SET', key2, arg2);`
 
@@ -54,18 +54,18 @@ func main() {
 		panic(err)
 	}
 
-  redisClient := redis.NewClient(&redis.Options{
-    Addr: "127.0.0.1:6379",
-    Password: "",
-    DB: 0,
-  })
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:6379",
+		Password: "",
+		DB: 0,
+	})
 
 	scriptArgs := make(redisLuaScriptUtils.RedisScriptArguments, 0)
 	scriptArgs["arg1"] = "arg1_expected_value"
 	scriptArgs["arg2"] = "arg2_expected_value"
 
-  joinedScript.Run(context.TODO(), redisClient, &scriptArgs).Result()
+	joinedScript.Run(context.TODO(), redisClient, &scriptArgs).Result()
 
-  redisClient.Close()
+	redisClient.Close()
 }
 ```

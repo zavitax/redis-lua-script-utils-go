@@ -31,18 +31,18 @@ func TestCompileScript(t *testing.T) {
 		return
 	}
 
-	expectedScript := `key1 = KEYS[1];
-key2 = KEYS[2];
+	expectedScript := `local key1 = KEYS[1];
+local key2 = KEYS[2];
 
-arg1 = ARGV[1];
-arg2 = ARGV[2];
+local arg1 = ARGV[1];
+local arg2 = ARGV[2];
 
 redis.call('SET', key1, arg1);
 redis.call('SET', key2, arg2);
 redis.call('SET', key2, arg2);`
 
 	if compiled.String() != expectedScript {
-		t.Errorf("Expected compiled.Script() to match expected script")
+		t.Errorf("Expected compiled.Script() to match expected script: [%s] != [%s]", compiled.String(), expectedScript)
 		return
 	}
 

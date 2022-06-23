@@ -44,7 +44,7 @@ func CompileRedisScript(script *RedisScript, keys []*RedisKey) (*CompiledRedisSc
 	for _, arg := range script.args {
 		argIndex++
 
-		compiledArgs = compiledArgs + fmt.Sprintf("%s = ARGV[%d];\n", arg, argIndex)
+		compiledArgs = compiledArgs + fmt.Sprintf("local %s = ARGV[%d];\n", arg, argIndex)
 	}
 
 	compiledKeys := ""
@@ -53,7 +53,7 @@ func CompileRedisScript(script *RedisScript, keys []*RedisKey) (*CompiledRedisSc
 	for _, key := range keys {
 		keyIndex++
 
-		compiledKeys = compiledKeys + fmt.Sprintf("%s = KEYS[%d];\n", key.Key(), keyIndex)
+		compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key.Key(), keyIndex)
 	}
 
 	if len(compiledArgs) > 0 {
