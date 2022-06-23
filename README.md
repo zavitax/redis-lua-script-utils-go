@@ -27,8 +27,8 @@ package main
 
 import (
   "context"
-	"github.com/go-redis/redis/v8"
-	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils-go"
+  "github.com/go-redis/redis/v8"
+  redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils-go"
 )
 
 func main() {
