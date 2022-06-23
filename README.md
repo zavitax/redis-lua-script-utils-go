@@ -44,7 +44,9 @@ func main() {
 		[]*redisLuaScriptUtils.RedisScript{script1, script2, script3},
 		[]*redisLuaScriptUtils.RedisKey{
 			redisLuaScriptUtils.NewStaticKey("key1", "keyName1"),
-			redisLuaScriptUtils.NewStaticKey("key2", "keyName2"),
+			redisLuaScriptUtils.NewDynamicKey("key2", func(args *redisLuaScriptUtils.RedisScriptArguments) string {
+				return (*args)["key2_value"].(string)
+			},
 		},
 	)
 
@@ -61,6 +63,7 @@ func main() {
 	scriptArgs := make(redisLuaScriptUtils.RedisScriptArguments, 0)
 	scriptArgs["arg1"] = "arg1_expected_value"
 	scriptArgs["arg2"] = "arg2_expected_value"
+	scriptArgs["key2_value"] = "keyName2"
 
 	joinedScript.Run(context.TODO(), redisClient, &scriptArgs).Result()
 
