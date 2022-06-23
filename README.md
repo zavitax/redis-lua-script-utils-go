@@ -18,7 +18,9 @@ So what do you do?
 
 This package allows maintaining (and testing) separate chunks of LUA scripts, merging them and their Keys and Arguments parameters into one single script unit in your program code.
 
-Once merged, it expects KEYS and ARGV values to be supplied as maps, validating input and executing the complete, merged script against redis in an efficient manner.
+Once merged, it reuses KEYS supplied during final script compilation stage and expects ARGV values to be supplied as a map, validating input and executing the complete, merged script against redis in an efficient manner.
+
+Dynamic KEYS can be computed using ARGV values as input.
 
 ## Example
 
