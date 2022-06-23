@@ -1,4 +1,4 @@
-# redis-lua-script-utils-go-go
+# redis-lua-script-utils-go
 
 Utilities for composing and executing Redis LUA scripts
 
@@ -14,7 +14,7 @@ Will this work? Yes.
 Is it maintainable? Likely not.
 So what do you do?
 
-## `redis-lua-script-utils-go-go` to the rescue!
+## `redis-lua-script-utils-go` to the rescue!
 
 This package allows maintaining (and testing) separate chunks of LUA scripts, merging them and their Keys and Arguments parameters into one single script unit in your program code.
 
