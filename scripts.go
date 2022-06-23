@@ -14,7 +14,7 @@ func NewRedisScript(keys []string, args []string, scriptText string) *RedisScrip
 	}
 }
 
-func JoinRedisScripts(scripts []*RedisScript) *RedisScript {
+func joinRedisScripts(scripts []*RedisScript) *RedisScript {
 	result := &RedisScript{}
 
 	uniqueKeys := make(map[string]bool, 0)

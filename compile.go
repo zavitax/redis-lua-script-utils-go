@@ -17,7 +17,9 @@ type CompiledRedisScript struct {
 	mx          sync.RWMutex
 }
 
-func CompileRedisScript(script *RedisScript, keys []*RedisKey) (*CompiledRedisScript, error) {
+func CompileRedisScripts(scripts []*RedisScript, keys []*RedisKey) (*CompiledRedisScript, error) {
+	script := joinRedisScripts(scripts)
+
 	suppliedKeys := make(map[string]*RedisKey)
 
 	for _, key := range keys {

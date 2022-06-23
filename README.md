@@ -40,10 +40,8 @@ func main() {
 	script2 := redisLuaScriptUtils.NewRedisScript([]string{"key2"}, []string{"arg2"}, scriptText2)
 	script3 := redisLuaScriptUtils.NewRedisScript([]string{"key2"}, []string{"arg2"}, scriptText3)
 
-	joinedScript := redisLuaScriptUtils.JoinRedisScripts([]*redisLuaScriptUtils.RedisScript{script1, script2, script3})
-
-	compiled, err := redisLuaScriptUtils.CompileRedisScript(
-		joinedScript,
+	compiled, err := redisLuaScriptUtils.CompileRedisScripts(
+		[]*redisLuaScriptUtils.RedisScript{script1, script2, script3},
 		[]*redisLuaScriptUtils.RedisKey{
 			redisLuaScriptUtils.NewStaticKey("key1", "keyName1"),
 			redisLuaScriptUtils.NewStaticKey("key2", "keyName2"),
