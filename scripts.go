@@ -6,7 +6,7 @@ type RedisScript struct {
 	keys       []string
 }
 
-func NewRedisScript(scriptText string, keys []string, args []string) *RedisScript {
+func NewRedisScript(keys []string, args []string, scriptText string) *RedisScript {
 	return &RedisScript{
 		scriptText: scriptText,
 		args:       args,

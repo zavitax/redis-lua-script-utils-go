@@ -12,9 +12,9 @@ func TestCompileScript(t *testing.T) {
 	scriptText2 := `redis.call('SET', key2, arg2);`
 	scriptText3 := `redis.call('SET', key2, arg2);`
 
-	script1 := redisLuaScriptUtils.NewRedisScript(scriptText1, []string{"key1"}, []string{"arg1"})
-	script2 := redisLuaScriptUtils.NewRedisScript(scriptText2, []string{"key2"}, []string{"arg2"})
-	script3 := redisLuaScriptUtils.NewRedisScript(scriptText3, []string{"key2"}, []string{"arg2"})
+	script1 := redisLuaScriptUtils.NewRedisScript([]string{"key1"}, []string{"arg1"}, scriptText1)
+	script2 := redisLuaScriptUtils.NewRedisScript([]string{"key2"}, []string{"arg2"}, scriptText2)
+	script3 := redisLuaScriptUtils.NewRedisScript([]string{"key2"}, []string{"arg2"}, scriptText3)
 
 	joinedScript := redisLuaScriptUtils.JoinRedisScripts([]*redisLuaScriptUtils.RedisScript{script1, script2, script3})
 
