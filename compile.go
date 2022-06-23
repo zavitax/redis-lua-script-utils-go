@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type RedisScriptArguments map[string]interface{}
 type CompiledRedisScript struct {
 	script      RedisScript
 	scriptText  string
@@ -37,32 +38,40 @@ func CompileRedisScript(script *RedisScript, keys []*RedisKey) (*CompiledRedisSc
 		result.keys[key] = suppliedKeys[key]
 	}
 
-	result.scriptText = "\n" + result.scriptText
+	compiledArgs := ""
 
 	argIndex := 0
-	for arg, _ := range script.args {
+	for _, arg := range script.args {
 		argIndex++
 
-		result.scriptText = fmt.Sprintf("%s = ARGV[%d]\n%s", arg, argIndex, result.scriptText)
+		compiledArgs = compiledArgs + fmt.Sprintf("%s = ARGV[%d];\n", arg, argIndex)
 	}
 
-	result.scriptText = "\n" + result.scriptText
+	compiledKeys := ""
 
 	keyIndex := 0
-	for key, _ := range keys {
+	for _, key := range keys {
 		keyIndex++
 
-		result.scriptText = fmt.Sprintf("%s = KEYS[%d]\n%s", key, keyIndex, result.scriptText)
+		compiledKeys = compiledKeys + fmt.Sprintf("%s = KEYS[%d];\n", key.Key(), keyIndex)
+	}
+
+	if len(compiledArgs) > 0 {
+		result.scriptText = compiledArgs + "\n" + result.scriptText
+	}
+
+	if len(compiledKeys) > 0 {
+		result.scriptText = compiledKeys + "\n" + result.scriptText
 	}
 
 	return result, nil
 }
 
-func (this *CompiledRedisScript) Script() string {
+func (this *CompiledRedisScript) String() string {
 	return this.scriptText
 }
 
-func (this *CompiledRedisScript) Keys(args *map[string]interface{}) []string {
+func (this *CompiledRedisScript) Keys(args *RedisScriptArguments) []string {
 	var result []string = []string{}
 
 	for _, key := range this.keys {
@@ -72,7 +81,7 @@ func (this *CompiledRedisScript) Keys(args *map[string]interface{}) []string {
 	return result
 }
 
-func (this *CompiledRedisScript) Args(args *map[string]interface{}) ([]interface{}, error) {
+func (this *CompiledRedisScript) Args(args *RedisScriptArguments) ([]interface{}, error) {
 	var result []interface{} = []interface{}{}
 
 	for _, arg := range this.script.args {
@@ -88,7 +97,7 @@ func (this *CompiledRedisScript) Args(args *map[string]interface{}) ([]interface
 	return result, nil
 }
 
-func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, args *map[string]interface{}) *redis.Cmd {
+func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, args *RedisScriptArguments) *redis.Cmd {
 	if this.redisScript == nil {
 		this.mx.Lock()
 		this.redisScript = redis.NewScript(this.scriptText)

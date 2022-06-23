@@ -33,10 +33,26 @@ func JoinRedisScripts(scripts []*RedisScript) *RedisScript {
 				result.args = append(result.args, key)
 				uniqueArgs[key] = true
 			}
+		}
 
-			result.scriptText = result.scriptText + "\n" + result.scriptText
+		if len(result.scriptText) > 0 {
+			result.scriptText = result.scriptText + "\n" + script.scriptText
+		} else {
+			result.scriptText = script.scriptText
 		}
 	}
 
 	return result
+}
+
+func (this *RedisScript) String() string {
+	return this.scriptText
+}
+
+func (this *RedisScript) Keys() []string {
+	return this.keys
+}
+
+func (this *RedisScript) Args() []string {
+	return this.args
 }

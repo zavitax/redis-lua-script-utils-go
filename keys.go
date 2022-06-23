@@ -1,6 +1,6 @@
 package redisLuaScriptUtils
 
-type RedisKeyValueGeneratorFunc func(args *map[string]interface{}) string
+type RedisKeyValueGeneratorFunc func(args *RedisScriptArguments) string
 
 type RedisKey struct {
 	id           string
@@ -27,7 +27,7 @@ func (this *RedisKey) Key() string {
 	return this.id
 }
 
-func (this *RedisKey) Value(args *map[string]interface{}) string {
+func (this *RedisKey) Value(args *RedisScriptArguments) string {
 	if this.dynamicValue == nil {
 		return this.staticValue
 	} else {
