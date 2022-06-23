@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils"
+	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils-go"
 )
 
 func TestCompileScript(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/zavitax/redis-lua-script-utils
+module github.com/zavitax/redis-lua-script-utils-go
 
 go 1.18
 

@@ -3,7 +3,7 @@ package redisLuaScriptUtils_test
 import (
 	"testing"
 
-	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils"
+	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils-go"
 )
 
 func TestStaticKeys(t *testing.T) {
