@@ -67,7 +67,7 @@ func main() {
 	scriptArgs["arg2"] = "arg2_expected_value"
 	scriptArgs["key2_value"] = "keyName2"
 
-	joinedScript.Run(context.TODO(), redisClient, &scriptArgs).Result()
+	compiled.Run(context.TODO(), redisClient, &scriptArgs).Result()
 
 	redisClient.Close()
 }

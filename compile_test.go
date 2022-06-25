@@ -1,9 +1,11 @@
 package redisLuaScriptUtils_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
+	"github.com/go-redis/redis/v8"
 	redisLuaScriptUtils "github.com/zavitax/redis-lua-script-utils-go"
 )
 
@@ -35,9 +37,17 @@ local key2 = KEYS[2];
 local arg1 = ARGV[1];
 local arg2 = ARGV[2];
 
+local function ____joinedRedisScripts_0____()
 redis.call('SET', key1, arg1);
+end
+local function ____joinedRedisScripts_1____()
 redis.call('SET', key2, arg2);
-redis.call('SET', key2, arg2);`
+end
+local function ____joinedRedisScripts_2____()
+redis.call('SET', key2, arg2);
+end
+return {____joinedRedisScripts_0____(), ____joinedRedisScripts_1____(), ____joinedRedisScripts_2____()}
+`
 
 	if compiled.String() != expectedScript {
 		t.Errorf("Expected compiled.Script() to match expected script: [%s] != [%s]", compiled.String(), expectedScript)
@@ -62,4 +72,47 @@ redis.call('SET', key2, arg2);`
 	if _, err := compiled.Args(&argsValues); err == nil {
 		t.Error("Expected missing argument to yield error")
 	}
+}
+
+func TestFunctions(t *testing.T) {
+	scriptText1 := `
+		return "RESULT1"
+	`
+
+	scriptText2 := `
+		return "RESULT2"
+	`
+
+	script1 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{}, scriptText1)
+	script2 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{}, scriptText2)
+
+	compiled, err := redisLuaScriptUtils.CompileRedisScripts(
+		[]*redisLuaScriptUtils.RedisScript{script1, script2},
+		[]*redisLuaScriptUtils.RedisKey{},
+	)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	scriptArgs := make(redisLuaScriptUtils.RedisScriptArguments, 0)
+	result, err2 := compiled.Run(context.TODO(), redisClient, &scriptArgs).StringSlice()
+
+	if err2 != nil {
+		t.Error(err2)
+		return
+	}
+
+	expectedResult := []string{"RESULT1", "RESULT2"}
+	if !reflect.DeepEqual(result, expectedResult) {
+		t.Errorf("Expected result [%v] to match expected result [%v]", result, expectedResult)
+	}
+
+	redisClient.Close()
 }

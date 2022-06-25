@@ -1,5 +1,10 @@
 package redisLuaScriptUtils
 
+import (
+	"fmt"
+	"strings"
+)
+
 type RedisScript struct {
 	scriptText string
 	args       []string
@@ -20,7 +25,9 @@ func joinRedisScripts(scripts []*RedisScript) *RedisScript {
 	uniqueKeys := make(map[string]bool, 0)
 	uniqueArgs := make(map[string]bool, 0)
 
-	for _, script := range scripts {
+	var functionCalls []string
+
+	for scriptIndex, script := range scripts {
 		for _, key := range script.keys {
 			if !uniqueKeys[key] {
 				result.keys = append(result.keys, key)
@@ -35,12 +42,20 @@ func joinRedisScripts(scripts []*RedisScript) *RedisScript {
 			}
 		}
 
+		functionName := fmt.Sprintf("____joinedRedisScripts_%d____", scriptIndex)
+
+		envelopedScriptText := fmt.Sprintf("local function %s()\n%s\nend", functionName, script.scriptText)
+
+		functionCalls = append(functionCalls, fmt.Sprintf("%s()", functionName))
+
 		if len(result.scriptText) > 0 {
-			result.scriptText = result.scriptText + "\n" + script.scriptText
+			result.scriptText = result.scriptText + "\n" + envelopedScriptText
 		} else {
-			result.scriptText = script.scriptText
+			result.scriptText = envelopedScriptText
 		}
 	}
+
+	result.scriptText = result.scriptText + "\n" + "return {" + strings.Join(functionCalls, ", ") + "}\n"
 
 	return result
 }

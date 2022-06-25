@@ -106,7 +106,7 @@ func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, 
 		this.mx.Unlock()
 	}
 
-	if orderedArgsValues, err := this.Args(args); err != nil {
+	if orderedArgsValues, err := this.Args(args); err == nil {
 		return this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
 	} else {
 		panic(err)
