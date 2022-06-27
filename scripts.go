@@ -49,7 +49,7 @@ func joinRedisScripts(scripts []*RedisScript) *RedisScript {
 
 		compiledKeys := ""
 		for keyIndex, key := range result.keys {
-			compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key, keyIndex)
+			compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key, keyIndex+1)
 		}
 
 		functionName := fmt.Sprintf("____joinedRedisScripts_%d____", scriptIndex)
