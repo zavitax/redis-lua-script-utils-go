@@ -31,29 +31,6 @@ func TestCompileScript(t *testing.T) {
 		return
 	}
 
-	expectedScript := `local key1 = KEYS[1];
-local key2 = KEYS[2];
-
-local arg1 = ARGV[1];
-local arg2 = ARGV[2];
-
-local function ____joinedRedisScripts_0____()
-redis.call('SET', key1, arg1);
-end
-local function ____joinedRedisScripts_1____()
-redis.call('SET', key2, arg2);
-end
-local function ____joinedRedisScripts_2____()
-redis.call('SET', key2, arg2);
-end
-return {____joinedRedisScripts_0____(), ____joinedRedisScripts_1____(), ____joinedRedisScripts_2____()}
-`
-
-	if compiled.String() != expectedScript {
-		t.Errorf("Expected compiled.Script() to match expected script: [%s] != [%s]", compiled.String(), expectedScript)
-		return
-	}
-
 	argsValues := make(redisLuaScriptUtils.RedisScriptArguments, 0)
 	argsValues["arg1"] = "arg1_expected_value"
 	argsValues["arg2"] = "arg2_expected_value"
@@ -76,15 +53,15 @@ return {____joinedRedisScripts_0____(), ____joinedRedisScripts_1____(), ____join
 
 func TestFunctions(t *testing.T) {
 	scriptText1 := `
-		return "RESULT1"
+		return arg1
 	`
 
 	scriptText2 := `
-		return "RESULT2"
+		return arg2
 	`
 
-	script1 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{}, scriptText1)
-	script2 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{}, scriptText2)
+	script1 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{"arg1"}, scriptText1)
+	script2 := redisLuaScriptUtils.NewRedisScript([]string{}, []string{"arg2"}, scriptText2)
 
 	compiled, err := redisLuaScriptUtils.CompileRedisScripts(
 		[]*redisLuaScriptUtils.RedisScript{script1, script2},
@@ -102,6 +79,8 @@ func TestFunctions(t *testing.T) {
 	})
 
 	scriptArgs := make(redisLuaScriptUtils.RedisScriptArguments, 0)
+	scriptArgs["arg1"] = "RESULT1"
+	scriptArgs["arg2"] = "RESULT2"
 	result, err2 := compiled.Run(context.TODO(), redisClient, &scriptArgs).StringSlice()
 
 	if err2 != nil {

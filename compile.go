@@ -40,32 +40,6 @@ func CompileRedisScripts(scripts []*RedisScript, keys []*RedisKey) (*CompiledRed
 		result.keys[key] = suppliedKeys[key]
 	}
 
-	compiledArgs := ""
-
-	argIndex := 0
-	for _, arg := range script.args {
-		argIndex++
-
-		compiledArgs = compiledArgs + fmt.Sprintf("local %s = ARGV[%d];\n", arg, argIndex)
-	}
-
-	compiledKeys := ""
-
-	keyIndex := 0
-	for _, key := range keys {
-		keyIndex++
-
-		compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key.Key(), keyIndex)
-	}
-
-	if len(compiledArgs) > 0 {
-		result.scriptText = compiledArgs + "\n" + result.scriptText
-	}
-
-	if len(compiledKeys) > 0 {
-		result.scriptText = compiledKeys + "\n" + result.scriptText
-	}
-
 	return result, nil
 }
 
@@ -107,7 +81,13 @@ func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, 
 	}
 
 	if orderedArgsValues, err := this.Args(args); err == nil {
-		return this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
+		result := this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
+
+		if result.Err() != nil {
+			panic(fmt.Sprintf("Script run error: %v\nKeys: %v\nArgs: %v\nScript: %v\n\n", result.Err(), this.Keys(args), orderedArgsValues, this.scriptText))
+		}
+
+		return result
 	} else {
 		panic(err)
 	}

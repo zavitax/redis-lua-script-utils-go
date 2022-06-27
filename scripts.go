@@ -42,9 +42,19 @@ func joinRedisScripts(scripts []*RedisScript) *RedisScript {
 			}
 		}
 
+		compiledArgs := ""
+		for argIndex, arg := range result.args {
+			compiledArgs = compiledArgs + fmt.Sprintf("local %s = ARGV[%d];\n", arg, argIndex+1)
+		}
+
+		compiledKeys := ""
+		for keyIndex, key := range result.keys {
+			compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key, keyIndex)
+		}
+
 		functionName := fmt.Sprintf("____joinedRedisScripts_%d____", scriptIndex)
 
-		envelopedScriptText := fmt.Sprintf("local function %s()\n%s\nend", functionName, script.scriptText)
+		envelopedScriptText := fmt.Sprintf("local function %s()\n%s\n%s\n%s\nend", functionName, compiledKeys, compiledArgs, script.scriptText)
 
 		functionCalls = append(functionCalls, fmt.Sprintf("%s()", functionName))
 
