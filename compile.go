@@ -12,32 +12,51 @@ type RedisScriptArguments map[string]interface{}
 type CompiledRedisScript struct {
 	script      RedisScript
 	scriptText  string
-	keys        map[string]*RedisKey
+	keys        []*RedisKey
+	args        []string
 	redisScript *redis.Script
 	mx          sync.RWMutex
 }
 
-func CompileRedisScripts(scripts []*RedisScript, keys []*RedisKey) (*CompiledRedisScript, error) {
-	script := joinRedisScripts(scripts)
+func getUniqueKeys(keys []*RedisKey) []*RedisKey {
+	uniqueKeys := make(map[string]bool, 0)
+	uniqueKeysSlice := []*RedisKey{}
 
+	for _, key := range keys {
+		if !uniqueKeys[key.Key()] {
+			uniqueKeysSlice = append(uniqueKeysSlice, key)
+			uniqueKeys[key.Key()] = true
+		} else {
+			panic("Duplicate key: " + key.Key())
+		}
+	}
+
+	return uniqueKeysSlice
+}
+
+func CompileRedisScripts(scripts []*RedisScript, keys []*RedisKey) (*CompiledRedisScript, error) {
 	suppliedKeys := make(map[string]*RedisKey)
 
 	for _, key := range keys {
 		suppliedKeys[key.Key()] = key
 	}
 
+	for _, key := range keys {
+		if suppliedKeys[key.Key()] == nil {
+			return nil, fmt.Errorf("Missing required LUA script key: %v", key)
+		}
+	}
+
+	uniqueKeys := getUniqueKeys(keys)
+	uniqueArgs := getScriptsUniqueArgNames(scripts)
+
+	script := joinRedisScripts(scripts, uniqueKeys, uniqueArgs)
+
 	result := &CompiledRedisScript{
 		script:     *script,
 		scriptText: script.scriptText,
-		keys:       make(map[string]*RedisKey, 0),
-	}
-
-	for _, key := range script.keys {
-		if suppliedKeys[key] == nil {
-			return nil, fmt.Errorf("Missing required LUA script key: %v", key)
-		}
-
-		result.keys[key] = suppliedKeys[key]
+		keys:       uniqueKeys,
+		args:       uniqueArgs,
 	}
 
 	return result, nil

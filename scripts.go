@@ -19,37 +19,38 @@ func NewRedisScript(keys []string, args []string, scriptText string) *RedisScrip
 	}
 }
 
-func joinRedisScripts(scripts []*RedisScript) *RedisScript {
-	result := &RedisScript{}
-
-	uniqueKeys := make(map[string]bool, 0)
+func getScriptsUniqueArgNames(scripts []*RedisScript) []string {
 	uniqueArgs := make(map[string]bool, 0)
+	uniqueArgsSlice := []string{}
+
+	for _, script := range scripts {
+		for _, key := range script.args {
+			if !uniqueArgs[key] {
+				uniqueArgsSlice = append(uniqueArgsSlice, key)
+				uniqueArgs[key] = true
+			}
+		}
+	}
+
+	return uniqueArgsSlice
+}
+
+func joinRedisScripts(scripts []*RedisScript, keys []*RedisKey, args []string) *RedisScript {
+	result := &RedisScript{}
 
 	var functionCalls []string
 
 	for scriptIndex, script := range scripts {
-		for _, key := range script.keys {
-			if !uniqueKeys[key] {
-				result.keys = append(result.keys, key)
-				uniqueKeys[key] = true
-			}
-		}
-
-		for _, key := range script.args {
-			if !uniqueArgs[key] {
-				result.args = append(result.args, key)
-				uniqueArgs[key] = true
-			}
-		}
-
 		compiledArgs := ""
-		for argIndex, arg := range result.args {
+		for argIndex, arg := range args {
+			result.args = append(result.args, arg)
 			compiledArgs = compiledArgs + fmt.Sprintf("local %s = ARGV[%d];\n", arg, argIndex+1)
 		}
 
 		compiledKeys := ""
-		for keyIndex, key := range result.keys {
-			compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key, keyIndex+1)
+		for keyIndex, key := range keys {
+			result.keys = append(result.keys, key.Key())
+			compiledKeys = compiledKeys + fmt.Sprintf("local %s = KEYS[%d];\n", key.Key(), keyIndex+1)
 		}
 
 		functionName := fmt.Sprintf("____joinedRedisScripts_%d____", scriptIndex)
