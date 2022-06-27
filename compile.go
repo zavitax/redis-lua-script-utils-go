@@ -12,51 +12,32 @@ type RedisScriptArguments map[string]interface{}
 type CompiledRedisScript struct {
 	script      RedisScript
 	scriptText  string
-	keys        []*RedisKey
-	args        []string
+	keys        map[string]*RedisKey
 	redisScript *redis.Script
 	mx          sync.RWMutex
 }
 
-func getUniqueKeys(keys []*RedisKey) []*RedisKey {
-	uniqueKeys := make(map[string]bool, 0)
-	uniqueKeysSlice := []*RedisKey{}
-
-	for _, key := range keys {
-		if !uniqueKeys[key.Key()] {
-			uniqueKeysSlice = append(uniqueKeysSlice, key)
-			uniqueKeys[key.Key()] = true
-		} else {
-			panic("Duplicate key: " + key.Key())
-		}
-	}
-
-	return uniqueKeysSlice
-}
-
 func CompileRedisScripts(scripts []*RedisScript, keys []*RedisKey) (*CompiledRedisScript, error) {
+	script := joinRedisScripts(scripts)
+
 	suppliedKeys := make(map[string]*RedisKey)
 
 	for _, key := range keys {
 		suppliedKeys[key.Key()] = key
 	}
 
-	for _, key := range keys {
-		if suppliedKeys[key.Key()] == nil {
-			return nil, fmt.Errorf("Missing required LUA script key: %v", key)
-		}
-	}
-
-	uniqueKeys := getUniqueKeys(keys)
-	uniqueArgs := getScriptsUniqueArgNames(scripts)
-
-	script := joinRedisScripts(scripts, uniqueKeys, uniqueArgs)
-
 	result := &CompiledRedisScript{
 		script:     *script,
 		scriptText: script.scriptText,
-		keys:       uniqueKeys,
-		args:       uniqueArgs,
+		keys:       make(map[string]*RedisKey, 0),
+	}
+
+	for _, key := range script.keys {
+		if suppliedKeys[key] == nil {
+			return nil, fmt.Errorf("Missing required LUA script key: %v", key)
+		}
+
+		result.keys[key] = suppliedKeys[key]
 	}
 
 	return result, nil
@@ -69,8 +50,8 @@ func (this *CompiledRedisScript) String() string {
 func (this *CompiledRedisScript) Keys(args *RedisScriptArguments) []string {
 	var result []string = []string{}
 
-	for _, key := range this.keys {
-		result = append(result, key.Value(args))
+	for _, key := range this.script.keys {
+		result = append(result, this.keys[key].Value(args))
 	}
 
 	return result
@@ -100,6 +81,27 @@ func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, 
 	}
 
 	if orderedArgsValues, err := this.Args(args); err == nil {
+		result := this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
+
+		if result.Err() != nil {
+			panic(fmt.Sprintf("Script run error: %v\nKeys: %v\nArgs: %v\nScript: %v\n\n", result.Err(), this.Keys(args), orderedArgsValues, this.scriptText))
+		}
+
+		return result
+	} else {
+		panic(err)
+	}
+}
+
+func (this *CompiledRedisScript) RunDebug(ctx context.Context, client *redis.Client, args *RedisScriptArguments) *redis.Cmd {
+	if this.redisScript == nil {
+		this.mx.Lock()
+		this.redisScript = redis.NewScript(this.scriptText)
+		this.mx.Unlock()
+	}
+
+	if orderedArgsValues, err := this.Args(args); err == nil {
+		fmt.Printf("RunDebug:\n\tKeys: %v\n\tArgs: %v\nScript: %v\n\n\n", this.Keys(args), orderedArgsValues, this.scriptText)
 		result := this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
 
 		if result.Err() != nil {
