@@ -127,7 +127,7 @@ func (this *CompiledRedisScript) Run(ctx context.Context, client *redis.Client, 
 	if orderedArgsValues, err := this.Args(args); err == nil {
 		result := this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
 
-		if result.Err() != nil {
+		if result.Err() != nil && ctx.Err() == nil {
 			panic(fmt.Sprintf("Script run error: %v\nKeys: %v\nArgs: %v\nScript: %v\n\n", result.Err(), this.Keys(args), orderedArgsValues, this.scriptText))
 		}
 
@@ -148,7 +148,7 @@ func (this *CompiledRedisScript) RunDebug(ctx context.Context, client *redis.Cli
 		fmt.Printf("RunDebug:\n\tKeys: %v\n\tArgs: %v\nScript: %v\n\n\n", this.Keys(args), orderedArgsValues, this.scriptText)
 		result := this.redisScript.Run(ctx, client, this.Keys(args), orderedArgsValues)
 
-		if result.Err() != nil {
+		if result.Err() != nil && ctx.Err() == nil {
 			panic(fmt.Sprintf("Script run error: %v\nKeys: %v\nArgs: %v\nScript: %v\n\n", result.Err(), this.Keys(args), orderedArgsValues, this.scriptText))
 		}
 
